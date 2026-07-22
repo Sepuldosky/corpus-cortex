@@ -4,7 +4,7 @@
 >
 > **Qué NO es:** la arquitectura de Cortex. Acá no se diseña IA, ni CortexBase, ni táctica, ni afecto. Nada de lo que se escriba en este archivo decide cómo funciona el módulo — solo inventaría lo que ya se le prometió desde afuera, para que el Block de diseño empiece sabiendo qué tiene que honrar.
 >
-> **Por qué existe** (deuda D-13, hueco H5 del COMPLETO del 2026-07-19): `corpus-cortex/` contiene solo `LICENSE` y `README.md`, pero **es el destinatario de al menos cinco contratos congelados por otros repos**. Hasta hoy esas cinco firmas vivían dispersas en cuatro repos distintos y **nadie podía auditar si eran mutuamente consistentes, porque el repo que las recibe no tenía dónde contradecirlas**. El hallazgo 2.25 del COMPLETO fue la punta de ese iceberg.
+> **Por qué existe** (deuda D-13, hueco H5 del COMPLETO del 2026-07-19): `corpus-cortex/` contiene `LICENSE`, `README.md`, este mismo documento y su `CHANGELOG.md` —ni una línea de código, ni `CLAUDE.md`—, pero **es el destinatario de al menos cinco contratos congelados por otros repos**. Hasta hoy esas cinco firmas vivían dispersas en tres repos (corpus-cargo, corpus-caliber, corpus-stalker), repartidas en cuatro documentos, y **nadie podía auditar si eran mutuamente consistentes, porque el repo que las recibe no tenía dónde contradecirlas**. El hallazgo 2.25 del COMPLETO fue la punta de ese iceberg.
 >
 > **Autoridad: NINGUNA.** Cada fila de abajo tiene su **sede en otro repo** y este doc la **cita**. Si algo acá contradice a su sede, este doc está desactualizado (cita **FLU-22**: la sede gana siempre). No se acuña ni un solo `CTX-` desde acá — la familia `CTX` está reservada pero **sin entradas**, y acuñar la primera exige antes crear el `CLAUDE.md` del repo.
 
