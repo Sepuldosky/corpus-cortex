@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/cortex_lockup_dark.svg">
+    <img src="assets/cortex_lockup_light.svg" width="200" alt="Cortex">
+  </picture>
+</p>
+
 # Cortex
 
 Módulo de **IA de NPC** del ecosistema [Corpus](https://github.com/Sepuldosky/corpus) para
