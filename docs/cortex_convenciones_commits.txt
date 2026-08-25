@@ -9,13 +9,14 @@ Este doc cubre SOLO el repo corpus-cortex/. La estructura (secciones 0, 1, 2, 4,
 es idéntica a corpus/docs/corpus_convenciones_commits.txt; solo la sección 3
 (alcances) cambia porque depende del mapa de archivos de este repo.
 
-ESTADO: ESQUELETO. Cortex no tiene código — el repo es semilla (LICENSE, README,
-docs/Cortex_ContratosEntrantes.md, docs/CHANGELOG.md, assets/). Este doc existe por
-la misma razón que la §3 reservada de corpus-stalker: que el día que nazca la primera
-línea de IA nadie invente un alcance sobre la marcha. Los alcances de la §3 salen de
-lo que OTROS repos ya congelaron contra Cortex y de la línea del roadmap del
-framework, NO de un diseño de Cortex — ese bloque no abrió. Cuando abra, la §3 se
-revisa entera: acá no se decide arquitectura.
+ESTADO: el repo se FUNDÓ el 2026-08-24 (nació su CLAUDE.md y con él la sede de su
+familia de normas), pero SIGUE SIN CÓDIGO: lo que abrió es un bloque de diseño, el de
+escuadrones. Este doc existe por la misma razón que la §3 reservada de corpus-stalker:
+que el día que nazca la primera línea de IA nadie invente un alcance sobre la marcha.
+Los alcances de la §3 salieron de lo que OTROS repos ya congelaron contra Cortex y de
+la línea del roadmap del framework — salvo `escuadra`, que se sumó al fundarse el repo
+por voto del autor. La §3 se vuelve a revisar cuando el diseño de escuadrones cierre:
+acá no se decide arquitectura.
 =====================================================
 
 
@@ -86,13 +87,15 @@ paréntesis. Esta tabla es la de ESTE repo y MANDA. La §3 es por-repo y jamás 
 hereda del framework (cita GIT-6) — la §3 del framework es su mapa de primitivas y
 no describe nada de lo que vivirá acá.
 
-Esta regla NO lleva ID todavía. La familia CTX está reservada pero sin entradas, y
-acuñar la primera exige antes crear el CLAUDE.md del repo, que no existe (cita
-docs/Cortex_ContratosEntrantes.md, encabezado). Cuando ese CLAUDE.md nazca, esta
-regla toma su CTX-N y la §3 se revisa contra el diseño real.
+Esta regla es CTX-5, acuñada el 2026-08-24 al fundarse el repo. Hasta ese día NO
+podía llevar ID: la familia estaba reservada sin entradas porque su sede —el CLAUDE.md
+de este repo— no existía, y el checker se pone rojo si alguien acuña la primera norma
+de una familia contra un archivo fantasma. El doc esperó en prosa, y esa espera está
+anotada acá a propósito para que se entienda por qué una regla vieja tiene un ID
+nuevo.
 
-Dos alcances están EN USO; el resto están RESERVADOS y entran en vigor con su
-código. La lectura del dominio no se inventa acá: Cortex es táctica de combate de
+Dos alcances están EN USO; los diez restantes están RESERVADOS y entran en vigor con
+su código. La lectura del dominio no se inventa acá: Cortex es táctica de combate de
 NPC + afecto —dolor y miedo— según el roadmap del framework, y recibe seis
 contratos ya congelados por Cargo, Caliber y corpus-stalker
 (docs/Cortex_ContratosEntrantes.md).
@@ -120,9 +123,18 @@ contratos ya congelados por Cargo, Caliber y corpus-stalker
     Estado por NPC, tick, registro contra Corpus (RegisterModule + superficie
     pública), net y persistencia. El plumbing, no el comportamiento.
 
+  escuadra:
+    El escuadrón: quién lo integra, los cuatro grupos, la cola de órdenes, las
+    formaciones y el estado que sobrevive al menú. Es lo que ejecuta la rama
+    `command` del menú interactivo de Corpus, que es sólo su front-end (cita CTX-3).
+    Alcance sumado el 2026-08-24 al abrir su bloque, por voto del autor: el escuadrón
+    guarda estado propio que no es ni táctica de combate ni plumbing, y meterlo en
+    `tactica` haría indistinguible un commit de formación de uno de supresión.
+
   tactica:
     Táctica de combate: cobertura, posicionamiento, supresión, coordinación entre
-    NPCs. La mitad "fría" del dominio.
+    NPCs. La mitad "fría" del dominio. Ojo con la frontera contra `escuadra`: acá va
+    CÓMO pelea un NPC, allá va QUIÉN obedece a quién y en qué orden.
 
   afecto:
     Dolor y miedo, y cómo cambian el comportamiento. La mitad "caliente" del
@@ -137,8 +149,10 @@ contratos ya congelados por Cargo, Caliber y corpus-stalker
 
   caliber:
     El puente soft-dep hacia Caliber: eventos de daño y de extremidad que alimentan
-    al afecto. Es el gate del módulo — Cortex arranca cuando el Block 3 de Caliber
-    exponga esa superficie (contrato entrante #4, NO CONGELADO todavía).
+    al afecto. Es el gate de la mitad CALIENTE del módulo —no del módulo entero—:
+    el afecto arranca cuando el Block 3 de Caliber exponga esa superficie (contrato
+    entrante #4, NO CONGELADO todavía), y la táctica y el escuadrón no dependen de
+    ella (cita CTX-2).
 
   config:
     Convars, tablas de balance y funciones puras de configuración.
@@ -186,7 +200,10 @@ commit, se recomienda el uso de herramientas integradas en VSCode:
 Documentos complementarios:
   docs/Cortex_ContratosEntrantes.md         → lo que otros repos ya congelaron contra Cortex
   docs/CHANGELOG.md                         → historial del repo
-  CLAUDE.md                                 → NO EXISTE todavía; su creación desbloquea la familia CTX
+  ../CLAUDE.md                              → sede de las normas del módulo (familia CTX)
+  docs/cortex_estado.md                     → foto de HOY
+  docs/cortex_roadmap.txt                   → rumbo del módulo
+  docs/Cortex_Architecture.md               → diseño del módulo
   ../corpus/docs/corpus_flujo_trabajo.txt   → metodología compartida del ecosistema
   ../corpus/docs/corpus_roadmap.txt         → cuándo abre el bloque de diseño de Cortex
 =====================================================

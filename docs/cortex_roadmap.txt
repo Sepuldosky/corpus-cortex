@@ -1,0 +1,163 @@
+CORTEX — ROADMAP (BRÚJULA)
+Hacia dónde va el módulo y en qué orden. Qué construir next.
+=====================================================
+Documento vivo. Fija el RUMBO (secuencia estable de lo que sigue).
+"Dónde estamos dentro de esto" lo dice docs/cortex_estado.md (foto de HOY).
+Leer JUNTO con cortex_estado.md al decidir el próximo bloque.
+=====================================================
+
+
+0. CÓMO SE USA
+----------------
+
+Este doc ORDENA lo que sigue; cortex_estado.md dice en qué punto estamos. El detalle
+de diseño vive en Cortex_Architecture.md (y en los docs particulares que se
+desprendan) — acá NO se duplica; solo el orden y el criterio de entrada de cada
+tramo. Metodología: corpus/docs/corpus_flujo_trabajo.txt (canónica del ecosistema).
+
+NOTA DE LECTURA (cita FLU-22 y el voto del autor del 2026-07-19): este doc es
+INTENCIÓN PURA, no autoridad. Los IDs que aparecen acá son CITAS a normas cuya sede
+está en otro lado — este roadmap no acuña ninguna. Un "limpio" del gate de coherencia
+sobre este archivo se reporta NO-AUDITABLE POR DISEÑO.
+
+
+1. LA PARTICIÓN QUE ORDENA TODO LO DEMÁS
+------------------------------------------
+
+Cortex son DOS mitades con gates INDEPENDIENTES (cita CTX-2), y el orden del roadmap
+sale de esa partición y no de una preferencia:
+
+  MITAD FRÍA — escuadrón y táctica.
+    NO depende de Caliber. Se puede diseñar y escribir HOY.
+    Es lo que el autor abrió el 2026-08-24.
+
+  MITAD CALIENTE — afecto (dolor, miedo).
+    Gated por la superficie de eventos de daño/extremidad del Block 3 de Caliber,
+    que NO cerró. El hook que existe hoy (Caliber_LimbsUpdated) es un aviso de
+    refresh y no un evento de daño: payload (npc, reason), sin zona ni magnitud.
+    Diseñar contra eso sería diseñar contra algo que no está (cita CAL-22).
+
+El roadmap del framework (corpus/docs/corpus_roadmap.txt) enuncia el gate SIN
+partirlo — dice que Cortex entero arranca cuando Caliber exponga esa superficie. La
+partición es de acá, y es la razón por la que este bloque no está bloqueado.
+
+
+2. INMEDIATO — el bloque de ESCUADRONES
+-----------------------------------------
+
+  [1] HECHO (2026-08-24). EL REPO SE FUNDÓ. Nació CLAUDE.md —la sede de la familia
+      de normas del módulo, que hasta ese día no existía y dejaba a la familia
+      reservada sin poder acuñar ni una entrada— más este roadmap, cortex_estado.md
+      y Cortex_Architecture.md. Se acuñaron las cinco primeras normas del módulo y
+      el registro del ecosistema las indexa. Sin código: es un bloque de DISEÑO.
+
+  [2] ES LO PRÓXIMO. Leer las bases de NPC, en este orden y con esta pregunta:
+        a) dev/other/VJ Base/ — qué expone para DAR ÓRDENES a un NPC ya spawneado,
+           qué estado de escuadrón trae de fábrica (si trae), y por dónde se le
+           mete una orden externa sin forkearlo.
+        b) Los npc_* nativos de HL2 — qué hace el engine SOLO con sus squads
+           (el keyvalue de squad y lo que el motor coordina sin que nadie se lo
+           pida), porque lo que el engine ya hace no se reimplementa: se envuelve.
+           OJO: acá no se cita una firma de memoria. La superficie real se saca
+           del árbol y de la wiki, no de lo que uno cree recordar.
+      CRITERIO DE SALIDA: poder contestar si el escuadrón de Cortex ENVUELVE lo que
+      la base ya tiene o lo REEMPLAZA. Esa respuesta decide la forma del módulo
+      entero, y hoy no está.
+      OJO — el censo se hace sobre el ÁRBOL REAL de dev/other/, no sobre la memoria
+      de lo que esas bases hacen. Es la regla §4 del flujo.
+
+  [3] Contestar el contrato entrante #6 (scavenger-pickup: ¿es behavior de Cortex?).
+      Su sede —Caliber §9.c— lo dejó explícitamente abierto "a decidir en el diseño
+      de Cortex", y este bloque ES ese diseño. Las tres piezas que huelen a
+      comportamiento son elegir target, la animación y el timing. Si se re-homea,
+      se re-homea con parche en los DOS repos.
+      Criterio de entrada: [2] cerrado — sin saber qué expone VJ no se puede decir
+      dónde vive el behavior.
+
+  [4] Diseñar el escuadrón. Las cuatro preguntas que nadie contestó todavía:
+        - Quién lo integra (¿solo NPC? ¿jugadores también, y con qué asimetría?).
+        - Qué estado guarda, y dónde (cita COR-3: persistencia namespaced).
+        - Cómo se encola una orden, y qué pasa con la cola al morir el líder.
+        - Si las formaciones son de la ORDEN o del ESCUADRÓN. Fall In trae cuatro;
+          si la formación persiste, es otra pieza de estado.
+      Al cerrar, decidir si merece doc particular
+      (Cortex_Escuadrones_Arquitectura.md) por el criterio del flujo §2: "¿un
+      implementador necesita este doc solo, sin el general ni el chat, para
+      ejecutar?". Si sí, va aparte y la sección del general queda resumen + link.
+
+  [5] Bajar a código, por vertical slice (flujo §3): registro contra Corpus ->
+      estado de escuadrón -> una sola orden de punta a punta -> net -> el cable al
+      menú. UNA orden completa vale más que siete a medias.
+
+
+3. LO QUE ESTE BLOQUE NO PUEDE RESOLVER SOLO
+----------------------------------------------
+
+  (a) EL CAMPO "QUIÉN EJECUTA" DEL MENÚ. El mensaje de net del menú interactivo
+      lleva (id de acción, entidad, component) y no tiene dónde poner el ejecutor.
+      Una orden de escuadra tiene DOS objetivos —quién actúa y dónde— y ninguna
+      otra acción del menú tiene eso. Es decisión del FRAMEWORK, se resuelve por el
+      lado de corpus/, y bloquea el cable del punto [5]. Sede de la pregunta:
+      corpus/docs/Corpus_Interaccion_Arquitectura.md §8.bis.
+
+  (b) DEPLOY Y "THROW FLASHBANG AND CLEAR" — bloqueadas por CARGO, no por Caliber
+      (cita CTX-4). Hoy un NPC no puede ser dueño de un inventario: OwnerKey llama a
+      SteamID64, que es método de Player y no de Entity, así que con un NPC revienta
+      en vez de caer en el or. Abrir esa puerta es un voto de Cargo (¿el dueño de un
+      inventario deja de ser un jugador?). Arrastra además mejorar el efecto de
+      flash sobre NPCs — hoy quedan ciegos unos pocos segundos. Sede a leer para
+      eso: dev/other/Arc9 EFT explosives/.
+
+  (c) QUÉ ES UNA "PUERTA" para el sistema. prop_door_rotating y func_door son
+      entidades del engine; el mod immersive door openable de dev/other/ ya mapeó
+      sus siete keyvalues de sonido en dos familias, y es la referencia. Las cinco
+      órdenes de puerta no existen sin esta definición.
+
+
+4. SIGUIENTE — bloques futuros (orden por afinidad)
+-----------------------------------------------------
+
+  [6] FACCIONES. El framework de PROVIDERS que la sede de Cargo ya adjudicó a este
+      módulo (contrato entrante #1: GetFactionInfo, ANTICIPATORIO, con call-site
+      vivo del otro lado y degradación honesta). Cortex es dueño del dato; Cargo
+      solo renderiza. NO es una tabla hardcodeada: otros mods de facciones se
+      registran. Encadena con el contrato #5 —las defs de facción de corpus-stalker
+      son las que Cortex después le reporta a Cargo—, y de ahí sale un orden
+      implícito: el framework de providers ANTES que las defs.
+      Criterio de entrada: el escuadrón en código, porque "quién es amigo" y "quién
+      obedece" comparten estructura.
+
+  [7] AFECTO (dolor, miedo). Criterio de entrada DURO: que el Block 3 de Caliber
+      exponga eventos de daño/extremidad con zona y magnitud. Hasta entonces no se
+      diseña — cita CTX-2.
+
+  [8] LOOT TABLE (qué dropea un NPC al morir). Contrato entrante #3, DECLARADO, con
+      dueño Cortex/Caliber. Cargo pone el contenedor, la UI y el GC (contrato #2);
+      lo que falta de este lado es la MUERTE como evento semántico y el CONTENIDO.
+
+  [9] CORTEXBASE — la base de SNPC propia, tomando lo mejor de VJ/DRG/ZBase. NO
+      está derogada por CTX-1: va DEBAJO de la capa y DESPUÉS. Criterio de entrada:
+      la capa de escuadrones funcionando sobre bases de terceros, que es lo que
+      dice qué necesita de verdad una base propia.
+
+  [10] Las bases DIFERIDAS: DRG y ZBase. Se retoman cuando la capa esté cerrada
+      sobre VJ y HL2, y no antes — cada base nueva multiplica la superficie de
+      compat sin agregar una mecánica.
+
+Fronteras duras (cita COR-1 y COR-10: nada de esto sube al framework, y la lógica
+de dominio ajena no baja acá): el inventario y su UI son de Cargo; la armadura, los
+limbs y los escudos son de Caliber; sangre y heridas son de Coagulant; hambre y sed
+son de Craving; las defs de NPC de la Zona son de corpus-stalker, que las REGISTRA
+contra este módulo y no al revés.
+
+
+=====================================================
+Documentos complementarios:
+  docs/cortex_estado.md                     → foto de HOY (dónde estamos)
+  docs/Cortex_Architecture.md               → diseño del módulo
+  docs/Cortex_ContratosEntrantes.md         → lo que otros repos congelaron contra Cortex
+  docs/cortex_convenciones_commits.txt      → tipos y alcances de commit
+  ../CLAUDE.md                              → sede de las normas del módulo
+  ../corpus/docs/corpus_flujo_trabajo.txt   → cómo ejecutar cada tramo
+  ../corpus/docs/Corpus_Interaccion_Arquitectura.md → el menú que hará de front-end
+=====================================================

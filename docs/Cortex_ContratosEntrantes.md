@@ -4,9 +4,9 @@
 >
 > **Qué NO es:** la arquitectura de Cortex. Acá no se diseña IA, ni CortexBase, ni táctica, ni afecto. Nada de lo que se escriba en este archivo decide cómo funciona el módulo — solo inventaría lo que ya se le prometió desde afuera, para que el Block de diseño empiece sabiendo qué tiene que honrar.
 >
-> **Por qué existe** (deuda D-13, hueco H5 del COMPLETO del 2026-07-19): `corpus-cortex/` contiene `LICENSE`, `README.md`, este mismo documento y su `CHANGELOG.md` —ni una línea de código, ni `CLAUDE.md`—, pero **es el destinatario de al menos cinco contratos congelados por otros repos**. Hasta hoy esas cinco firmas vivían dispersas en tres repos (corpus-cargo, corpus-caliber, corpus-stalker), repartidas en cuatro documentos, y **nadie podía auditar si eran mutuamente consistentes, porque el repo que las recibe no tenía dónde contradecirlas**. El hallazgo 2.25 del COMPLETO fue la punta de ese iceberg.
+> **Por qué existe** (deuda D-13, hueco H5 del COMPLETO del 2026-07-19): cuando este doc nació, `corpus-cortex/` contenía `LICENSE`, `README.md`, él mismo y su `CHANGELOG.md` —ni una línea de código, ni `CLAUDE.md`—, pero **era ya el destinatario de al menos cinco contratos congelados por otros repos**. *(El repo se fundó el 2026-08-24 y hoy tiene `CLAUDE.md` y su set de docs; sigue sin código. Eso no cambia nada de lo que este doc inventaría: las seis firmas se congelaron antes, y por eso están acá.)* Hasta hoy esas cinco firmas vivían dispersas en tres repos (corpus-cargo, corpus-caliber, corpus-stalker), repartidas en cuatro documentos, y **nadie podía auditar si eran mutuamente consistentes, porque el repo que las recibe no tenía dónde contradecirlas**. El hallazgo 2.25 del COMPLETO fue la punta de ese iceberg.
 >
-> **Autoridad: NINGUNA.** Cada fila de abajo tiene su **sede en otro repo** y este doc la **cita**. Si algo acá contradice a su sede, este doc está desactualizado (cita **FLU-22**: la sede gana siempre). No se acuña ni un solo `CTX-` desde acá — la familia `CTX` está reservada pero **sin entradas**, y acuñar la primera exige antes crear el `CLAUDE.md` del repo.
+> **Autoridad: NINGUNA.** Cada fila de abajo tiene su **sede en otro repo** y este doc la **cita**. Si algo acá contradice a su sede, este doc está desactualizado (cita **FLU-22**: la sede gana siempre). **Y sigue sin acuñar una sola norma propia**, aunque desde el 2026-08-24 la familia del módulo ya tenga sede y entradas: la sede de las normas de Cortex es su `CLAUDE.md`, no este archivo — que es de recepción.
 
 ---
 
@@ -96,7 +96,7 @@ Encaja con 3.1: los datos de facción que stalker registre son los que Cortex de
 
 ### 3.6 · Scavenger-pickup — una frontera abierta a propósito
 
-**Situación: DECLARADO, a decidir en el diseño de Cortex.**
+**Situación: DECLARADO, a decidir en el diseño de Cortex — y ese diseño ABRIÓ el 2026-08-24**, así que la pregunta está sobre la mesa ahora. Es el punto [3] de `cortex_roadmap.txt`, con criterio de entrada: leer antes qué expone VJ Base.
 
 El comportamiento de recolección de armas por NPC vive hoy en Caliber (`corpus_caliber_scavenger.lua`), acoplado al drop de `Limbs`. Su sede (§9.c) reconoce que **elegir target, la animación y el timing huelen a comportamiento NPC — territorio de Cortex**, pero deja la decisión explícitamente abierta: se re-homea **solo si** se confirma como behavior al diseñar Cortex.
 
@@ -118,9 +118,9 @@ El valor de juntar las seis filas en un solo lugar es poder preguntarse si se co
 Para que nadie lea de más en este documento:
 
 - **Nada de la IA de Cortex.** Táctica de combate, peek, dolor, miedo, CortexBase — todo eso es el Block de diseño de Cortex y **no existe todavía**. Este doc no lo prejuzga.
-- **La familia `CTX` está reservada, sin entradas.** Está en `familias` del registro con `pendiente: true`. Acuñar su **primera entrada** exige antes crear `corpus-cortex/CLAUDE.md`, que es la sede declarada de la familia — el checker se pone rojo si se acuña sin eso. **Este documento no acuña ninguna.**
+- **La familia `CTX` ya no está reservada: se fundó el 2026-08-24** junto con `corpus-cortex/CLAUDE.md`, que es su sede, y salió del registro con `pendiente: true`. **Este documento sigue sin acuñar ninguna** — no es su rol.
 
-  *(Nota de método: la primera redacción de esta viñeta escribía la etiqueta de esa primera entrada de forma literal, y el checker la cazó al instante como `HUERFANO_DOC` — un ID citado y no definido. Correcto: no distingue "cito una norma" de "menciono un identificador", y no debería. Se reescribió en prosa.)*
+  *(Nota de método, y se conserva porque la lección no caducó: la primera redacción de esta viñeta escribía la etiqueta de la primera entrada de la familia de forma literal, y el checker la cazó al instante como `HUERFANO_DOC` — un ID citado y no definido. Correcto: no distingue "cito una norma" de "menciono un identificador", y no debería. Se reescribió en prosa, y **le volvió a pasar a otra redacción el 2026-08-24**, en `Corpus_Interaccion_Arquitectura.md` §5.4. Desde que la familia tiene sede y entradas, citarla ya no dispara nada; lo que sigue valiendo es la regla de fondo — **una norma que se nombra tiene que estar en el registro en el mismo parche**.)*
 - **Los eventos de daño/limb (3.4) NO son un contrato**, por más que dos docs los mencionen. Son un pendiente de Caliber.
 - **La decisión de base de NPC** (que CortexBase se construye propia, tomando lo mejor de VJ/DRG/ZBase, con compat después) es una decisión del autor registrada fuera de este repo; no es un contrato entrante y no se documenta acá.
 
