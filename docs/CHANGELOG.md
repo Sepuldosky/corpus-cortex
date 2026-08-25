@@ -105,3 +105,63 @@ IDs corrió en verde antes y después. El barrido de ratificación cruzó las si
 **valor** —«repo semilla», «sin `CLAUDE.md`», «familia sin entradas»— y no por la lista de
 destinos que traía el plan; lo que apareció en `corpus/` se corrigió en el mismo parche y está
 registrado en el CHANGELOG de ese repo. No commiteado ni pusheado (GIT-7).
+
+---
+
+## PARCHES DE sesión Censo de las bases de NPC — punto [2] CERRADO — 2026-08-24
+
+Segunda tanda del mismo día, sobre el repo recién fundado. **Punto [2] del roadmap:** leer las
+bases de NPC y contestar si el escuadrón de Cortex **envuelve** lo que ya existe o lo
+**reemplaza**. Sólo prosa: el repo sigue sin código.
+
+**La respuesta: ENVUELVE — pero no el squad del engine, sino la MAQUINARIA DE SCHEDULES.** La
+pregunta estaba mal planteada, y eso salió de medir: *«squad»* nombra dos cosas distintas.
+
+- PARCHE 1 — **`docs/Cortex_Architecture.md` §7 (nueva)**, con la §8 renumerada. Autosuficiente a
+  propósito: el detalle con los call-sites quedó en `dev/CORTEX_CENSO_BASES_NPC.md`, y **esa
+  carpeta está fuera de git** — si el censo se pierde, la sección sigue alcanzando para ejecutar.
+  La pregunta 1 de §6.1 pasa de ABIERTA a cerrada. **[APLICADO 2026-08-24]**
+- PARCHE 2 — **`CLAUDE.md` acuña CTX-6**: el escuadrón corre **en PARALELO** al squad del engine;
+  no se pisa `SetSquad` y el original **se guarda desde el día uno**. Votado por el autor sobre el
+  censo. El motivo es que **son el mismo campo** y el del engine es un **BANDO**: de las 60 defs de
+  NPC de HL2, **46 nacen en siete nombres globales de facción** (`overwatch` 18, `resistance` 12,
+  `zombies` 7…), con desborde a `overwatch0`/`overwatch1` al pasar el tope de 16. Meter un combine
+  en «el grupo rojo del jugador» **le sacaría la coordinación con los otros combines**, que el
+  engine hace en C++. Costo aceptado y dicho en voz alta: los miembros de un grupo **no se
+  coordinan entre sí** por el motor. **[APLICADO 2026-08-24]**
+- PARCHE 3 — **`CLAUDE.md` acuña CTX-7**: la cola de órdenes **SONDEA**. Medido: 40 usos de
+  `IsCurrentSchedule` contra **cero** de cualquier callback de fin de schedule. ⚠ Y la trampa que
+  la norma existe para evitar: **`TaskComplete()` no sirve**, aunque tenga 185 usos — es algo que
+  un NPC **se llama a sí mismo** dentro de un schedule *custom*, confirmado abriendo sus
+  call-sites. Quien lo lea por el nombre diseña la cola por eventos y la cola no avanza nunca.
+  **[APLICADO 2026-08-24]**
+- PARCHE 4 — **`docs/cortex_estado.md`** y **`docs/cortex_roadmap.txt`**: el punto [2] pasa a
+  HECHO con sus cinco resultados, el [3] (contrato #6) es lo próximo y su criterio de entrada ya
+  está cumplido. Del roadmap se **eliminó** la receta del censo ya ejecutado: conservaba la línea
+  *«y hoy no está»*, que la propia tanda volvió falsa. Queda el MÉTODO, que es lo reutilizable.
+  **[APLICADO 2026-08-24]**
+
+### ⚠ Lo que se dio vuelta a mitad del censo, y se registra porque el error era plausible
+
+Mirando **sólo** el sandbox de GMod y VJ Base —las dos fuentes obvias— el squad parece algo que
+**se fija con un keyvalue al spawnear y no se toca más**, porque es lo único que esas dos hacen.
+Con esa foto, la conclusión escrita habría sido *«no se puede reasignar en runtime de forma
+útil»*, **y es falsa**: `NPC:SetSquad()`/`GetSquad()` existen y **dos addons sin relación entre
+sí** los usan en vivo. Se descartó además que ZBase los definiera él mismo —cero definiciones en
+sus 155 archivos—, que era la hipótesis que invalidaba todo.
+
+*Un censo acotado a donde crees que está el sospechoso no lo encuentra donde no está.*
+
+### Y un hallazgo que ahorra trabajo, en vez de crearlo
+
+**VJ y HL2 puro comparten el canal de destino.** `SCHEDULE_GOTO_POSITION` de VJ arma
+`TASK_GET_PATH_TO_LASTPOSITION`, y el patrón del engine es `SetLastPosition` + `SCHED_FORCED_GO`:
+**las dos bases leen `LastPosition`**. *Move To* **no son dos implementaciones** — es un
+`SetLastPosition` común y dos formas de arrancar el schedule.
+
+**Verificación:** sin superficie de runtime. Cada afirmación se adjudicó **abriendo el archivo**
+(§7.3.b) y con **denominador declarado**; el instrumento fue `rg --no-ignore` acotado por carpeta,
+no el Grep del harness. Tres huecos quedan **declarados y no tapados**: qué coordina el C++ con un
+squad, si `SetSquad` en runtime reordena esa coordinación o sólo cambia una etiqueta, y qué
+capabilities trae cada `npc_*` de HL2 —de lo que depende una orden de puerta—. Los tres se miden
+**en juego**. No commiteado ni pusheado (GIT-7).

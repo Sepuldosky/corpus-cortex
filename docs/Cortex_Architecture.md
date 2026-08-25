@@ -19,7 +19,8 @@
 4. [Lo que Cortex POSEE, y lo que sólo consume](#4-lo-que-cortex-posee-y-lo-que-sólo-consume)
 5. [El escuadrón — lo poco que ya está fijado](#5-el-escuadrón--lo-poco-que-ya-está-fijado)
 6. [Lo que está ABIERTO](#6-lo-que-está-abierto)
-7. [Verificación](#7-verificación)
+7. [Las bases de NPC: qué expone cada una — MEDIDO](#7-las-bases-de-npc-qué-expone-cada-una--medido)
+8. [Verificación](#8-verificación)
 
 ---
 
@@ -113,7 +114,7 @@ Se despliega *algo*, así que sus hijos son objetos y no verbos: **la lista la a
 
 ### 6.1 Las cuatro preguntas del escuadrón
 
-1. **¿Envuelve o reemplaza?** VJ Base y los `npc_*` de HL2 ya coordinan algo por su cuenta. **Lo que el engine y la base ya hacen no se reimplementa: se envuelve.** Contestar esto exige leer `dev/other/VJ Base/` y la superficie real de squads de HL2 — **del árbol y de la wiki, no de memoria**. Es el punto [2] del roadmap y **decide la forma del módulo entero**.
+1. ~~**¿Envuelve o reemplaza?**~~ **CERRADA el 2026-08-24 — ver §7.** Envuelve, y se midió qué. La respuesta cambió la pregunta: lo que se envuelve **no es el squad del engine** sino la maquinaria de schedules.
 2. **¿Quién integra un escuadrón?** ¿Sólo NPC? ¿Jugadores también? La asimetría de §5.2 dice que un jugador *recibe* y no *ejecuta*, pero no dice si es miembro.
 3. **¿Qué estado guarda, y qué le pasa al morir el líder?** La cola de §5.2 y la formación de §5.1 son estado que **sobrevive al menú**. Persistir va por `Corpus.Data` namespaced (**COR-3**), si es que hay algo que persistir entre mapas.
 4. **¿La formación es de la ORDEN o del ESCUADRÓN?** *Fall In* trae cuatro. Si la formación persiste, es otra pieza de estado; si es un argumento de la orden, no lo es.
@@ -134,7 +135,64 @@ Eso bloquea `Deploy` y la secuencia que el autor pidió, **«throw flashbang and
 
 `prop_door_rotating` y `func_door` son entidades del engine. **Las cinco órdenes de puerta no existen sin esta definición**, y el menú ya le puso una precondición fuerte: la puerta **sólo trae sus cinco acciones si comunica dos lados navegables** —decorativa, tapiada o sin sala detrás no las trae, y **abierta o cerrada da igual**. Referencia disponible: el mod `immersive door openable` de `dev/other/`, que ya mapeó sus **siete keyvalues de sonido** en dos familias.
 
-## 7. Verificación
+## 7. Las bases de NPC: qué expone cada una — MEDIDO
+
+> **DECIDIDO por medición, el 2026-08-24.** Censo sobre el árbol real: VJ Base (**96 archivos, 28.431 líneas**), la fuente de Garry's Mod en disco (**60 defs de NPC** en `base_npcs.lua`), y —sólo como fuente de información sobre la API del engine, **no** como base a soportar— ZBase, `combat intelligence ai fixed` y `terminator nextbot`.
+>
+> El detalle con los call-sites uno por uno quedó en `dev/CORTEX_CENSO_BASES_NPC.md`. **Esa carpeta está fuera de git**, así que lo de acá es autosuficiente a propósito: si el censo se pierde, esta sección alcanza para ejecutar.
+
+### 7.1 La respuesta: ENVUELVE — pero no lo que uno esperaría
+
+**Cortex envuelve la MAQUINARIA DE SCHEDULES, no el squad del engine.** El motivo es que el «squad» de HL2 y el escuadrón de Cortex **no son la misma cosa**, aunque el nombre invite a creerlo:
+
+| | **Squad del engine** | **Escuadrón de Cortex** |
+|---|---|---|
+| Qué agrupa | un **BANDO** | **a quién obedece el jugador** |
+| Quién lo asigna | el spawn, por def del NPC | el jugador, en runtime |
+| Tamaño | tope **16** | cuatro grupos de color |
+| Para qué sirve | que el C++ coordine entre sí a los de la misma facción | dar órdenes con cola y formación |
+
+**La prueba de que es un bando:** de las 60 defs de NPC de HL2, **46 nacen con squad**, en **siete nombres globales** — `overwatch` (18 NPCs), `resistance` (12), `zombies` (7), `antlions` (4), `poison` (2), `novaprospekt` (2), `npc_stalker_squad` (1). Todos los combines del mapa caen en el mismo hasta el tope de 16, y el sandbox desborda a `overwatch0`, `overwatch1`… ⇒ **a qué squad pertenece un NPC de HL2 es un accidente del orden de spawn.**
+
+⚠ **Y son el MISMO CAMPO:** un NPC tiene un solo squad. Por eso hizo falta el voto que fija **CTX-6**.
+
+### 7.2 VJ Base: no tiene escuadrones ni órdenes, pero sí la maquinaria
+
+Sobre sus 28.431 líneas: **`Leader` da CERO hits**. `squad` da 10, y **ocho son un solo bloque del spawner copiado literal del sandbox de GMod** (su propio comentario cita la procedencia); los otros dos son enums del engine. De los 40 hits de `command`, **ninguno es una orden**: son `concommand`, `RunConsoleCommand` y el campo `Command` de botones de menú.
+
+**Lo que sí tiene, y Cortex CONSUME en vez de duplicar:**
+
+- **`ENT:Follow(ent, doToggle)`** — API pública documentada; devuelve `(bool, código)` con cuatro códigos de fallo: `1` estacionario, `2` **ya sigue a otra entidad**, `3` hostil o neutral. ⭐ El código 2 es una restricción de diseño **que ya existe**: un NPC de VJ sigue a UNA entidad a la vez.
+- **`ENT:OnFollow(status, ent)`** — hook definido **vacío** en las dos bases. Es el punto de extensión sin fork.
+- **Ocho métodos `SCHEDULE_*`**, todos con un parámetro `customFunc(schedule)` que corre sobre el schedule antes de arrancarlo ⇒ **se le agregan tasks sin tocar VJ**. `GOTO_POSITION` es *Move To*, `IDLE_STAND` es *Hold*, `COVER_*` y `FACE` cubren *Cover*.
+
+### 7.3 HL2 puro: el mismo canal, distinto arranque
+
+El patrón para mandar a un NPC del engine a un punto, **verificado en cuatro sitios independientes**:
+
+```lua
+npc:SetLastPosition(pos)
+npc:SetSchedule(SCHED_FORCED_GO_RUN)   -- SCHED_FORCED_GO para caminar
+```
+
+> ⭐⭐ **Acá está el hallazgo que ahorra la mitad del trabajo: es el MISMO canal que usa VJ.** `SCHEDULE_GOTO_POSITION` arma `TASK_GET_PATH_TO_LASTPOSITION`, o sea que **las dos bases leen el destino de `LastPosition`**. *Move To* **no son dos implementaciones**: es un `SetLastPosition` común y dos formas de arrancar el schedule. Igual con entidades — VJ lee `GetTarget()` y el engine tiene `SCHED_TARGET_CHASE`/`SCHED_TARGET_FACE`.
+
+El engine cubre solo *Move To*, *Cover*, *Hold*, *Search and Secure* y mirar. ⚠ **No tiene nada** para formaciones, *Stack Up*, *Breach* ni *Wedge*: todo eso lo escribe Cortex.
+
+### 7.4 ⚠ Cuatro trampas medidas, y ninguna da error
+
+1. **El destino NO es argumento de los métodos de movimiento de VJ.** El primer parámetro de `SCHEDULE_GOTO_POSITION(moveTask, customFunc)` es el **task de movimiento** (`TASK_RUN_PATH`/`TASK_WALK_PATH`), no la posición. Quien lea el nombre y le pase un vector **no recibe un error: recibe un NPC que camina al último punto que tuviera guardado.**
+2. **`SCHEDULE_COVER_ENEMY` tiene el mismo cuerpo que `SCHEDULE_COVER_ORIGIN`** — los dos arman `TASK_FIND_COVER_FROM_ORIGIN`. `TASK_FIND_COVER_FROM_ENEMY` existe y VJ lo usa, pero en otro archivo. **El nombre del método miente sobre lo que hace.**
+3. **No hay API para LISTAR los miembros de un squad.** `ai.GetSquadMemberCount` devuelve un **conteo** de un nombre que hay que conocer de antemano ⇒ **Cortex lleva su propia lista, obligatoriamente.**
+4. **`CapabilitiesAdd`**: un NPC del engine sólo hace lo que sus capabilities permiten. Si una orden exige una que no tiene, **no falla ruidoso: no hace nada.** No se censó cuáles trae cada `npc_*`, y una orden de puerta depende de eso.
+
+### 7.5 Lo que este censo NO puede contestar
+
+- **Qué coordina realmente el C++ con un squad.** Es código del engine: se mide **en juego**, no se lee.
+- **Si `SetSquad` en runtime reordena esa coordinación o sólo cambia una etiqueta.** ZBase lo usa como si funcionara; eso es evidencia de **uso**, no de **efecto**.
+- **Las bases diferidas no se auditaron.** DRG y ZBase se consultaron por una pregunta puntual sobre la API del engine; este censo **no las evalúa** como bases a soportar.
+
+## 8. Verificación
 
 No hay test runner (es un addon GMod). Mientras el repo sea sólo docs, **«verificado» significa revisado contra su sede y contra el árbol real** — nunca contra el chat. La jerarquía de §7.1 del flujo pone al código por encima de todo doc, y **este módulo diseña por delante del código a propósito** (mock-first, flujo §3).
 

@@ -40,6 +40,7 @@ sale de esa partición y no de una preferencia:
 El roadmap del framework (corpus/docs/corpus_roadmap.txt) enuncia el gate SIN
 partirlo — dice que Cortex entero arranca cuando Caliber exponga esa superficie. La
 partición es de acá, y es la razón por la que este bloque no está bloqueado.
+(Ratificado en ese roadmap el 2026-08-24, en el mismo parche que fundó el repo.)
 
 
 2. INMEDIATO — el bloque de ESCUADRONES
@@ -51,28 +52,41 @@ partición es de acá, y es la razón por la que este bloque no está bloqueado.
       y Cortex_Architecture.md. Se acuñaron las cinco primeras normas del módulo y
       el registro del ecosistema las indexa. Sin código: es un bloque de DISEÑO.
 
-  [2] ES LO PRÓXIMO. Leer las bases de NPC, en este orden y con esta pregunta:
-        a) dev/other/VJ Base/ — qué expone para DAR ÓRDENES a un NPC ya spawneado,
-           qué estado de escuadrón trae de fábrica (si trae), y por dónde se le
-           mete una orden externa sin forkearlo.
-        b) Los npc_* nativos de HL2 — qué hace el engine SOLO con sus squads
-           (el keyvalue de squad y lo que el motor coordina sin que nadie se lo
-           pida), porque lo que el engine ya hace no se reimplementa: se envuelve.
-           OJO: acá no se cita una firma de memoria. La superficie real se saca
-           del árbol y de la wiki, no de lo que uno cree recordar.
-      CRITERIO DE SALIDA: poder contestar si el escuadrón de Cortex ENVUELVE lo que
-      la base ya tiene o lo REEMPLAZA. Esa respuesta decide la forma del módulo
-      entero, y hoy no está.
-      OJO — el censo se hace sobre el ÁRBOL REAL de dev/other/, no sobre la memoria
-      de lo que esas bases hacen. Es la regla §4 del flujo.
+  [2] HECHO (2026-08-24). CENSO DE LAS BASES DE NPC, cerrado contra el árbol real. El
+      criterio de salida está contestado: ENVUELVE, y lo que se envuelve NO es el squad del
+      engine sino LA MAQUINARIA DE SCHEDULES. Resultado en Cortex_Architecture.md §7, con
+      el detalle y los call-sites en dev/CORTEX_CENSO_BASES_NPC.md (fuera de git).
+      LO QUE SALIÓ, en una línea cada uno:
+        - VJ Base NO tiene escuadrones ni órdenes: `Leader` da CERO hits en 28.431 líneas,
+          y los 40 de `command` son consolas y botones de menú.
+        - SÍ tiene ENT:Follow (con hook OnFollow vacío) y OCHO métodos SCHEDULE_* que
+          aceptan customFunc — el punto de extensión sin fork.
+        - El squad de HL2 es un BANDO, no una escuadra: 46 de 60 defs nacen en siete
+          nombres globales de facción. De ahí salió el voto que fija CTX-6.
+        - VJ y HL2 puro COMPARTEN el canal de destino (LastPosition): Move To no son dos
+          implementaciones.
+        - No hay evento de "orden terminada" — de ahí CTX-7.
+      ⚠ Y una que se dio vuelta a mitad de camino: mirando sólo el sandbox de GMod y VJ, el
+      squad parece imposible de reasignar en runtime. Es FALSO — SetSquad/GetSquad existen
+      y dos addons no relacionados los usan. Un censo acotado a donde crees que está el
+      sospechoso no lo encuentra donde no está.
+      QUEDA SIN MEDIR, declarado: qué coordina el C++ con un squad (se mide en juego), si
+      SetSquad reordena esa coordinación o sólo cambia una etiqueta, y qué capabilities
+      trae cada npc_* de HL2 — una orden de puerta depende de eso.
 
-  [3] Contestar el contrato entrante #6 (scavenger-pickup: ¿es behavior de Cortex?).
+      EL MÉTODO, conservado porque vale para el próximo censo: se mide sobre el ÁRBOL
+      REAL y con DENOMINADOR (regla §4 del flujo), nunca sobre la memoria de lo que
+      esas bases hacen ni citando una firma de recuerdo; y el instrumento es
+      `rg --no-ignore` acotado por carpeta, porque el Grep del harness sub-reporta en
+      silencio sobre este workspace.
+
+  [3] ES LO PRÓXIMO. Contestar el contrato entrante #6 (scavenger-pickup: ¿es behavior de
+      Cortex?).
       Su sede —Caliber §9.c— lo dejó explícitamente abierto "a decidir en el diseño
       de Cortex", y este bloque ES ese diseño. Las tres piezas que huelen a
       comportamiento son elegir target, la animación y el timing. Si se re-homea,
       se re-homea con parche en los DOS repos.
-      Criterio de entrada: [2] cerrado — sin saber qué expone VJ no se puede decir
-      dónde vive el behavior.
+      Criterio de entrada: [2] cerrado — YA LO ESTÁ desde el 2026-08-24.
 
   [4] Diseñar el escuadrón. Las cuatro preguntas que nadie contestó todavía:
         - Quién lo integra (¿solo NPC? ¿jugadores también, y con qué asimetría?).
