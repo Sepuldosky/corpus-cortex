@@ -80,28 +80,77 @@ partición es de acá, y es la razón por la que este bloque no está bloqueado.
       `rg --no-ignore` acotado por carpeta, porque el Grep del harness sub-reporta en
       silencio sobre este workspace.
 
-  [3] ES LO PRÓXIMO. Contestar el contrato entrante #6 (scavenger-pickup: ¿es behavior de
-      Cortex?).
-      Su sede —Caliber §9.c— lo dejó explícitamente abierto "a decidir en el diseño
-      de Cortex", y este bloque ES ese diseño. Las tres piezas que huelen a
-      comportamiento son elegir target, la animación y el timing. Si se re-homea,
-      se re-homea con parche en los DOS repos.
-      Criterio de entrada: [2] cerrado — YA LO ESTÁ desde el 2026-08-24.
+  [3] HECHO (2026-08-25). CONTRATO ENTRANTE #6 CONTESTADO: el scavenger-pickup SÍ es
+      comportamiento de NPC y por eso queda bajo la autoridad de Cortex sobre el cuerpo del
+      NPC — PERO NO SE RE-HOMEA. Es una adjudicación de AUTORIDAD y no de HOSTING, y leer
+      las dos como una sola es lo que tenía la pregunta trabada desde julio (CTX-8).
+      LO QUE LA MEDICIÓN DIO VUELTA:
+        - El archivo NO ES UNA COSA, SON TRES (valuación de armas / contabilidad de armas
+          tiradas / el comportamiento), y sólo la tercera es behavior.
+        - El acoplamiento VA AL REVÉS de lo que decían dos docs: el scavenger no llama a
+          limbs ni una vez — es limbs quien lo llama, en 5 call-sites ya guardados.
+        - El costo del re-home, medido y no estimado: 14 de 17 convars son de comportamiento
+          y TODAS son FCVAR_ARCHIVE (reset silencioso de config en todo server instalado), y
+          Caliber solo perdería la feature entera.
+      ⚠ Y LO URGENTE ERA OTRA COSA, QUE YA ESTÁ ROTA HOY: ese comportamiento conduce el
+      cuerpo del NPC por EL MISMO CANAL que Cortex (LastPosition), así que le pisa el destino
+      a una orden y su animación de pickup en VJ le BORRA el schedule — sin dar un error, y
+      con un falso verde en el sondeo de CTX-7. De ahí sale CTX-9: la conducción del cuerpo
+      se ARBITRA. Es la norma que la fila 6 no pedía y era la que hacía falta.
 
-  [4] Diseñar el escuadrón. Las cuatro preguntas que nadie contestó todavía:
-        - Quién lo integra (¿solo NPC? ¿jugadores también, y con qué asimetría?).
-        - Qué estado guarda, y dónde (cita COR-3: persistencia namespaced).
-        - Cómo se encola una orden, y qué pasa con la cola al morir el líder.
-        - Si las formaciones son de la ORDEN o del ESCUADRÓN. Fall In trae cuatro;
-          si la formación persiste, es otra pieza de estado.
-      Al cerrar, decidir si merece doc particular
-      (Cortex_Escuadrones_Arquitectura.md) por el criterio del flujo §2: "¿un
-      implementador necesita este doc solo, sin el general ni el chat, para
-      ejecutar?". Si sí, va aparte y la sección del general queda resumen + link.
+  [4] HECHO (2026-08-25). EL ESCUADRÓN DISEÑADO. Las cuatro preguntas de §6.1 están
+      contestadas, y el diseño MERECIÓ DOC PARTICULAR por el criterio del flujo §2:
+      docs/Cortex_Escuadrones_Arquitectura.md, nueve secciones, autosuficiente. §5 del doc
+      general quedó como resumen + link, sin duplicar contenido.
+      LOS VOTOS DEL AUTOR, en una línea cada uno:
+        - QUIÉN LO INTEGRA: un solo roster con NPCs Y jugadores. La asimetría no es de
+          pertenencia sino de DOS EJES — ingreso (al NPC se lo asigna, al jugador se lo
+          invita) y ejecución (al NPC la orden le mueve el cuerpo, al jugador le llega como
+          aviso). ⚠ El comandante NO es una fila del roster, y hay DOS "líderes" que no son
+          lo mismo: el comandante (jugador) y el rol LEADER (un miembro, como MEDIC).
+        - QUÉ ESTADO GUARDA: el roster es VOLÁTIL y no se persiste (CTX-10), y no por
+          elección — sus miembros son ENTIDADES, la cola guarda coordenadas de ESTE mapa, y
+          el EntIndex no sirve de sustituto porque los índices se reciclan. Sólo califica para
+          Corpus.Data lo que sobrevive a un mapa: los nombres de grupo y la membresía de un
+          JUGADOR, con scope "save".
+        - AL MORIR EL COMANDANTE: la escuadra SOBREVIVE, la cola se CONGELA y los miembros
+          pasan a Hold. Al respawnear la recupera intacta. Al morir un ROL, se cae el rol y
+          no la escuadra — y lo que dependía de él se GRISEA, con el vocabulario que el mock
+          ya usó para Heal sin médico.
+        - LA FORMACIÓN ES DEL ESCUADRÓN (CTX-11), no argumento de la orden — voto CONTRA la
+          opción barata. Cuesta un subsistema: slot por miembro, ancla con rumbo y re-emisión
+          periódica. Con una REGLA DE SUSPENSIÓN que no es un detalle: la suspenden sin
+          borrarla el combate, Hold, Cover y Stack Up — sin eso la escuadra entra en cuña a
+          un tiroteo.
+        - EL AMARILLO ES LA UNIÓN (CTX-12): los elementos son TRES. Resuelve una
+          contradicción entre el mock (que le pone el TOTAL al lado) y la prosa de §8.ter del
+          doc del menú ("los cuatro grupos"). El campo `group` vale red/blue/green/nil y
+          NUNCA yellow: el amarillo no se guarda, se CALCULA.
+      ⚠ DE DÓNDE NO SALIÓ LA DE FORMACIÓN: el mock v2 NO la decide. No dibuja ni una
+      formación — sus dos apariciones de "Wedge" son la orden de PUERTA — y Fall In es una
+      hoja sin hijos. Leer su silencio habría sido un argumento por ausencia.
+      Y ANTES DE ESCRIBIR EL MECANISMO SE MIDIÓ SI VJ YA LO TENÍA, porque el censo había
+      anotado ENT:Follow como punto de extensión: NO SIRVE para mantener formación — su
+      tolerancia es un ANILLO de ~2,5 m y no un punto, sigue ENTIDADES y no posiciones, y
+      sólo existe en VJ. Lo que sí se llevó de ahí es la CADENCIA: VJ re-emite su propio
+      follow cada 0,5 s y le alcanza. Punto de partida medido, NO resultado.
 
-  [5] Bajar a código, por vertical slice (flujo §3): registro contra Corpus ->
-      estado de escuadrón -> una sola orden de punta a punta -> net -> el cable al
-      menú. UNA orden completa vale más que siete a medias.
+      LA LECCIÓN QUE SE REPITIÓ EN LAS TRES PREGUNTAS, y por eso se conserva: NINGUNA SE
+      CONTESTÓ COMO ESTABA FORMULADA. La del scavenger escondía un supuesto, la del estado
+      venía con el "dónde" dado por sentado, y la del líder tenía DOS SUJETOS adentro.
+      Una pregunta abierta que se contesta tal cual vino suele ser una pregunta que nadie miró.
+
+  [5] ES LO PRÓXIMO. Bajar a código, por vertical slice (flujo §3): registro contra Corpus
+      -> estado de escuadrón -> una sola orden de punta a punta -> net -> el cable al menú.
+      UNA orden completa vale más que siete a medias.
+      Criterio de entrada: el diseño escrito y autosuficiente — YA LO ESTÁ desde el
+      2026-08-25 (docs/Cortex_Escuadrones_Arquitectura.md).
+      ⚠ DOS COSAS ANTES DE LA PRIMERA LÍNEA:
+        (1) El CABLE AL MENÚ sigue bloqueado por el campo "quién ejecuta" (§3.a de abajo).
+            El RESTO del slice NO lo está — registro, estado y una orden se escriben sin eso.
+        (2) La orden que se elija para el slice tiene que poder EJERCER el arbitraje de
+            CTX-9, o el slice no prueba lo que el bloque descubrió. Move To es la candidata
+            natural: es la que comparte canal con el scavenger.
 
 
 3. LO QUE ESTE BLOQUE NO PUEDE RESOLVER SOLO

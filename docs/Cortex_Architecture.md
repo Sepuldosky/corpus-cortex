@@ -5,7 +5,7 @@
 > **Cómo leerlo, para no leer de más:** cada afirmación de acá es de uno de tres tipos, y el tipo está marcado en el texto.
 > - **DECIDIDO** — hay un voto del autor o una sede de otro repo que lo fija. Vinculante.
 > - **HEREDADO** — viene de un contrato entrante. Su sede está en otro repo y acá se **cita**, jamás se re-deriva (→ [`Cortex_ContratosEntrantes.md`](Cortex_ContratosEntrantes.md)).
-> - **ABIERTO** — nadie lo decidió. **Está en §6, y §6 es la parte más importante de este documento.**
+> - **ABIERTO** — nadie lo decidió. Está en §6. ⚠ **Al 2026-08-25 §6 ya no es lo más importante del doc: las cuatro preguntas del escuadrón cerraron y el contrato entrante #6 se contestó.** Lo que queda abierto ahí son las dos paredes que este módulo no puede tirar solo, y la definición de «puerta».
 >
 > Un doc que describe un slice sin código no está mintiendo; está haciendo su trabajo (flujo §7.1). Lo que sí sería mentir es presentar como diseño lo que todavía es una pregunta — por eso §6 existe y es larga.
 
@@ -17,7 +17,7 @@
 2. [La partición en dos mitades](#2-la-partición-en-dos-mitades)
 3. [Dependencias: qué se asume y qué se detecta](#3-dependencias-qué-se-asume-y-qué-se-detecta)
 4. [Lo que Cortex POSEE, y lo que sólo consume](#4-lo-que-cortex-posee-y-lo-que-sólo-consume)
-5. [El escuadrón — lo poco que ya está fijado](#5-el-escuadrón--lo-poco-que-ya-está-fijado)
+5. [El escuadrón — resumen, y el link al doc particular](#5-el-escuadrón--resumen-y-el-link-al-doc-particular)
 6. [Lo que está ABIERTO](#6-lo-que-está-abierto)
 7. [Las bases de NPC: qué expone cada una — MEDIDO](#7-las-bases-de-npc-qué-expone-cada-una--medido)
 8. [Verificación](#8-verificación)
@@ -79,13 +79,35 @@ Esta tabla es la razón por la que [`Cortex_ContratosEntrantes.md`](Cortex_Contr
 | El **contenido** del drop (loot table) | **Cortex/Caliber** | **HEREDADO** (#3), por exclusión. La tabla se cierra al diseñar el bloque dueño |
 | El **estado del escuadrón** | **Cortex** | **DECIDIDO** — **CTX-3** |
 | El cadáver como **contenedor**, su UI y su **GC** | **Cargo** | **HEREDADO** (#2). No es de Cortex, y eso mantiene el loot agnóstico a su diseño |
-| El **scavenger-pickup** | **sin decidir** | **ABIERTO** (#6) — §6.1 |
+| El **scavenger-pickup** | **Caliber** (el código) · **Cortex** (la autoridad) | **CONTESTADO el 2026-08-25** (#6) — **CTX-8**. Es behavior, y por eso el cuerpo del NPC responde a Cortex; **pero el archivo no se mueve**. Ver §6.3 |
+| **Quién conduce el cuerpo** de un NPC | **Cortex** | **DECIDIDO** — **CTX-9**. Todo behavior autónomo del ecosistema pide y suelta el volante |
 
 ⚠ **La cadena de facción se lee entera o no se entiende:** corpus-stalker **registra** sus facciones → Cortex las **resuelve** → Cargo las **pinta**. De ahí sale un orden de implementación que no es opcional: **el framework de providers antes que las defs**.
 
-## 5. El escuadrón — lo poco que ya está fijado
+## 5. El escuadrón — resumen, y el link al doc particular
 
-**Casi todo el escuadrón está abierto.** Lo que sigue es lo único con respaldo, y viene de fuera de este repo.
+> ⭐ **El diseño del escuadrón se desprendió a doc PARTICULAR el 2026-08-25:**
+> [`Cortex_Escuadrones_Arquitectura.md`](Cortex_Escuadrones_Arquitectura.md). Ahí viven el modelo de
+> estado completo, el arbitraje del cuerpo, la cola y la formación — y **es el doc que hay que leer
+> para implementar**, por el criterio del flujo §2 (*«¿un implementador necesita este doc solo, sin el
+> general ni el chat, para ejecutar?»*). **Esta sección es su resumen y no duplica su contenido.**
+
+**Lo que cerró el 2026-08-25**, en una línea cada uno:
+
+| | Qué se decidió |
+|---|---|
+| **CTX-8** | El **scavenger-pickup** ES behavior de NPC ⇒ queda bajo la autoridad de Cortex — **pero NO se re-homea**. Autoridad, no hosting |
+| **CTX-9** | La **conducción del cuerpo se arbitra**: un dueño a la vez, la orden del jugador gana. ⚠ Hace falta porque **hoy ya se rompe sin dar un error** |
+| **CTX-10** | El **roster es VOLÁTIL**: no se persiste, y no por elección — sus miembros son entidades |
+| **CTX-11** | La **formación es del ESCUADRÓN**, con regla de suspensión |
+| **CTX-12** | El **amarillo es la UNIÓN**: los elementos son **tres** |
+
+**Y quién integra un escuadrón:** un solo roster con NPCs y jugadores, distinguidos por **dos ejes
+independientes** —ingreso (al NPC se lo asigna, al jugador se lo invita) y ejecución (al NPC la orden
+le mueve el cuerpo, al jugador le llega como aviso)—; ⚠ **el comandante NO es una fila**, y ⚠⚠ hay
+**dos «líderes»** que no son lo mismo: el comandante (jugador) y el rol `LEADER` (un miembro).
+
+Lo que sigue es el respaldo que ya existía antes de ese bloque, y viene de fuera de este repo.
 
 ### 5.1 El catálogo de órdenes — **DECIDIDO**, y con una advertencia
 
@@ -110,14 +132,21 @@ Se despliega *algo*, así que sus hijos son objetos y no verbos: **la lista la a
 
 ## 6. Lo que está ABIERTO
 
-**Esta sección es el trabajo del bloque.** Nada de acá está decidido, y ninguna de estas preguntas se contesta sin leer antes el árbol real.
+**Esta sección era el trabajo del bloque, y el bloque la cerró.** Las cuatro preguntas de §6.1 están
+contestadas — una el 2026-08-24 por medición, tres el 2026-08-25 por voto— y el contrato entrante de §6.3
+también. **Lo que sigue realmente abierto es §6.2 y §6.4**, y ninguna de las dos se destraba desde este repo.
 
-### 6.1 Las cuatro preguntas del escuadrón
+> ⭐ **Y una lección de las tres que cerraron, porque se repitió en las tres:** ninguna se contestó como
+> estaba formulada. La del scavenger escondía un supuesto (*ser behavior* ⇒ *vivir en Cortex*), la del estado
+> venía con el *dónde* dado por sentado (persistir), y la del líder tenía **dos sujetos distintos** adentro.
+> *Una pregunta abierta que se contesta tal cual vino suele ser una pregunta que nadie miró.*
+
+### 6.1 Las cuatro preguntas del escuadrón — **LAS CUATRO CERRADAS**
 
 1. ~~**¿Envuelve o reemplaza?**~~ **CERRADA el 2026-08-24 — ver §7.** Envuelve, y se midió qué. La respuesta cambió la pregunta: lo que se envuelve **no es el squad del engine** sino la maquinaria de schedules.
-2. **¿Quién integra un escuadrón?** ¿Sólo NPC? ¿Jugadores también? La asimetría de §5.2 dice que un jugador *recibe* y no *ejecuta*, pero no dice si es miembro.
-3. **¿Qué estado guarda, y qué le pasa al morir el líder?** La cola de §5.2 y la formación de §5.1 son estado que **sobrevive al menú**. Persistir va por `Corpus.Data` namespaced (**COR-3**), si es que hay algo que persistir entre mapas.
-4. **¿La formación es de la ORDEN o del ESCUADRÓN?** *Fall In* trae cuatro. Si la formación persiste, es otra pieza de estado; si es un argumento de la orden, no lo es.
+2. ~~**¿Quién integra un escuadrón?**~~ **CERRADA el 2026-08-25.** Un solo roster, con NPCs **y** jugadores; la asimetría no es de pertenencia sino de **dos ejes** (ingreso y ejecución). Detalle: doc particular §3.
+3. ~~**¿Qué estado guarda, y qué le pasa al morir el líder?**~~ **CERRADA el 2026-08-25** (**CTX-10**). ⭐ Y la respuesta al *dónde* dio vuelta la premisa: **el roster no se persiste**, porque sus miembros son entidades y la cola guarda coordenadas de este mapa. Lo del líder traía además **dos sujetos distintos** adentro. Detalle: doc particular §5 y §8.
+4. ~~**¿La formación es de la ORDEN o del ESCUADRÓN?**~~ **CERRADA el 2026-08-25 por voto del autor** (**CTX-11**): **del escuadrón**, con regla de suspensión. ⚠ Y **el mock no la decidía**: no dibuja ni una formación. Detalle: doc particular §6.
 
 ### 6.2 Dos paredes que este módulo no puede tirar solo
 
@@ -127,9 +156,11 @@ Se despliega *algo*, así que sus hijos son objetos y no verbos: **la lista la a
 
 Eso bloquea `Deploy` y la secuencia que el autor pidió, **«throw flashbang and clear»**, que además arrastra dos cosas más: **el efecto de flash sobre NPCs es pobre** (medido en juego: quedan ciegos unos pocos segundos — sede a leer: `dev/other/Arc9 EFT explosives/`), y **volver a la posición original** implica que la orden guarda un **punto de retorno**, o sea otra vez estado por escuadra.
 
-### 6.3 El contrato entrante que este bloque tiene que contestar
+### 6.3 ~~El contrato entrante que este bloque tiene que contestar~~ — **CONTESTADO el 2026-08-25**
 
-**#6 — ¿el scavenger-pickup es behavior de Cortex?** El comportamiento de recolección de armas por NPC vive hoy en Caliber (`corpus_caliber_scavenger.lua`), acoplado al drop de `Limbs`. Su sede (§9.c) reconoce que **elegir target, la animación y el timing huelen a comportamiento NPC** —territorio de este módulo— pero deja la decisión abierta a propósito: se re-homea **sólo si** se confirma como behavior al diseñar Cortex. **No hay nada que honrar: hay una pregunta que contestar**, y si se re-homea, se re-homea con parche en los **dos** repos.
+**#6 — ¿el scavenger-pickup es behavior de Cortex? Sí, y por eso queda bajo la autoridad de Cortex sobre el cuerpo del NPC — pero NO se re-homea** (**CTX-8**). Es una adjudicación de **autoridad**, no de **hosting**.
+
+⭐ **Lo que la medición dio vuelta, y por eso conviene tenerlo acá aunque el detalle esté en el doc particular §1:** el archivo **no es una cosa, son tres**, y sólo una es behavior; el acoplamiento **va al revés** de lo que decía la frase heredada —el scavenger no llama a limbs ni una vez, es limbs quien lo llama—; y **lo urgente no era el re-home**: hoy ese comportamiento ya conduce el cuerpo del NPC **por el mismo canal de §7.3**, así que le pisa el destino a una orden y le borra el schedule **sin dar un error**. De ahí sale **CTX-9**.
 
 ### 6.4 Qué es una «puerta» para el sistema
 

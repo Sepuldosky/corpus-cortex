@@ -165,3 +165,102 @@ no el Grep del harness. Tres huecos quedan **declarados y no tapados**: qué coo
 squad, si `SetSquad` en runtime reordena esa coordinación o sólo cambia una etiqueta, y qué
 capabilities trae cada `npc_*` de HL2 —de lo que depende una orden de puerta—. Los tres se miden
 **en juego**. No commiteado ni pusheado (GIT-7).
+
+---
+
+## PARCHES DE sesión El diseño del escuadrón — puntos [3] y [4] CERRADOS — 2026-08-25
+
+Sesión de **diseño** (flujo §2), sin una línea de código y a propósito. Contesta el **contrato
+entrante #6** —la última fila que este repo tenía pendiente de decidir— y las **tres preguntas
+abiertas** de `Cortex_Architecture.md` §6.1 que el censo del día anterior no había cerrado. Con eso
+**las cuatro preguntas del escuadrón quedan contestadas** y el módulo queda listo para bajar a
+código por vertical slice. **Cinco normas nuevas: CTX-8..CTX-12.**
+
+- PARCHE 1 — **Doc PARTICULAR nuevo: `docs/Cortex_Escuadrones_Arquitectura.md`.** Se desprendió del
+  general por el criterio del flujo §2 —*«¿un implementador necesita este doc solo, sin el general
+  ni el chat, para ejecutar?»*— y la respuesta es sí: lleva el modelo de estado completo, el
+  arbitraje del cuerpo, el roster, la cola, la formación y la muerte. Nueve secciones.
+  **[APLICADO 2026-08-25]**
+
+- PARCHE 2 — **`CLAUDE.md`**: alta de **CTX-8** (el scavenger es behavior pero no se re-homea),
+  **CTX-9** (la conducción del cuerpo se arbitra), **CTX-10** (el roster es volátil),
+  **CTX-11** (la formación es del escuadrón) y **CTX-12** (el amarillo es la unión). Más el link
+  al doc particular en la jerarquía de lectura y en el mapa de archivos. **[APLICADO 2026-08-25]**
+
+- PARCHE 3 — **`../../corpus/docs/ids.yaml`**: las cinco altas, tres con evidencia `codigo` y dos
+  en `INTENCION`. ⚠ **Y una corrección de ubicación que nadie había visto: CTX-6 y CTX-7 estaban
+  escritas dentro del bloque `CRG`**, no bajo el header de su familia. Se movieron **sin tocarles
+  una letra**. El checker no lo cazaba y no debería — no mira dónde vive una clave del mapa—, pero
+  el registro tenía la familia partida en dos lugares. Bloque `salud:` refrescado con la corrida
+  real: **269 IDs, 77 INTENCION (29%)**. **[APLICADO 2026-08-25]**
+
+- PARCHE 4 — **`docs/Cortex_Architecture.md`**: §5 pasa a **resumen + link** al doc particular (el
+  contenido no se duplica, flujo §2); §6.1 marca las cuatro preguntas cerradas; §6.3 pasa de
+  *«tiene que contestar»* a **CONTESTADO**; la tabla de §4 deja de decir que el scavenger está sin
+  decidir y gana la fila *quién conduce el cuerpo*; y la cabecera deja de prometer que §6 es lo más
+  importante del doc, porque ya no lo es. **[APLICADO 2026-08-25]**
+
+- PARCHE 5 — **`docs/Cortex_ContratosEntrantes.md`**: la fila 6 pasa a **CONTESTADO** en la tabla y
+  en §3.6, y §4 registra por qué **esperar fue lo correcto** — contestarlo en julio habría dado la
+  respuesta equivocada, porque el costo real sólo aparece abriendo el archivo. **[APLICADO 2026-08-25]**
+
+- PARCHE 6 — **`../../corpus-caliber/docs/Caliber_Architecture.md` §9.c**: la sede de la pregunta
+  deja de decir *«no se decide acá»*. Registra el veredicto (citando, no re-derivando), que el
+  archivo **no se mueve**, que su propia premisa estaba **al revés en la dirección**, y **el gate
+  que este repo sí gana** cuando Cortex tenga código. **[APLICADO 2026-08-25]**
+
+- PARCHE 7 — **`docs/cortex_estado.md`** y **`docs/cortex_roadmap.txt`**: los puntos [3] y [4]
+  pasan a HECHO, el [5] (vertical slice) es lo próximo con su criterio de entrada cumplido, y los
+  huecos que se miden en juego pasan de tres a **cinco**. **[APLICADO 2026-08-25]**
+
+### ⭐ Lo que las tres preguntas enseñaron, y se repitió en las tres
+
+**Ninguna se contestó como estaba formulada.**
+
+- La del **scavenger** escondía un supuesto —*ser behavior* ⇒ *vivir en Cortex*— y medirlo lo
+  desarmó: el archivo **no es una cosa, son tres**, sólo una es behavior, y **el acoplamiento va al
+  revés** de lo que decía la frase heredada en dos docs (el scavenger **no llama a limbs ni una
+  vez**; es limbs quien lo llama, en 5 call-sites ya guardados).
+- La del **estado** venía con el *dónde* dado por sentado. La respuesta es que **el roster no se
+  puede persistir**, y no por elección: sus miembros son **entidades**.
+- La del **líder** tenía **dos sujetos distintos adentro** — el comandante (un jugador, que no es
+  una fila del roster) y el rol `LEADER` (un miembro, como `MEDIC`).
+
+*Una pregunta abierta que se contesta tal cual vino suele ser una pregunta que nadie miró.*
+
+### ⚠ Y lo urgente no era lo que la fila 6 preguntaba
+
+La fila preguntaba de quién es el scavenger. Medido, **lo urgente era otra cosa y ya está roto
+hoy**: ese comportamiento conduce el cuerpo del NPC **por el mismo canal** que el censo del día
+anterior había identificado como el de Cortex. `MoveNPCToWeapon` le reescribe `LastPosition` a una
+orden en vuelo, y su animación de pickup en VJ corre con `lockAnim=true`, que hace **`StopMoving` +
+`ClearSchedule`**. Y la peor consecuencia cae sobre **CTX-7**: el sondeo lee un schedule que Cortex
+no puso y puede acreditar *«orden terminada»* cuando el NPC se fue a buscar una escopeta.
+
+**Un falso verde que sólo se descubre en el juego, y que mientras tanto acredita.** De ahí sale
+CTX-9, que es la norma que la fila 6 no pedía y era la que hacía falta.
+
+### La formación: el autor votó CONTRA la opción barata, y eso arrastra
+
+`Fall In` trae cuatro formaciones, y la pregunta era si son argumento de la orden o estado de la
+escuadra. **Votó estado**, que cuesta un subsistema —slot por miembro, ancla con rumbo, re-emisión
+periódica— contra una colocación de una vez.
+
+⚠ **Y hay que decir de dónde NO salió la respuesta: el mock v2 no la decide.** No dibuja ni una
+formación —sus dos apariciones de `Wedge` son la orden de **puerta**— y `Fall In` es una hoja sin
+hijos. Leer su silencio como *«entonces no es estado»* habría sido un argumento por ausencia sobre
+un dibujo que nunca cubrió el tema.
+
+**Antes de escribir el mecanismo se midió si VJ ya lo tenía**, porque el censo había anotado
+`ENT:Follow` como punto de extensión. **No sirve para esto:** su tolerancia es un **anillo** de
+~2,5 m y no un punto (`FollowMinDistance = 100` más las dos `OBBMaxs`), sigue **entidades** y no
+posiciones, y **sólo existe en VJ**. ⭐ Lo que sí se llevó de ahí es la **cadencia**: VJ re-emite su
+propio follow **cada 0,5 s** y le alcanza. Punto de partida medido, **no resultado**.
+
+**Verificación:** sin superficie de runtime. Cada afirmación se adjudicó **abriendo el archivo**, con
+denominador declarado, y con `rg --no-ignore` acotado por carpeta — no con el Grep del harness. El
+checker de IDs corrió **antes** (264/75 limpio, sin drift) **y después** (269/77 limpio). Cinco huecos
+quedan **declarados y no tapados**, los tres del censo más dos que abrió este bloque: a qué cadencia
+se puede re-emitir el destino de formación sin romper combate ni animaciones, y si el arbitraje de
+CTX-9 realmente elimina la colisión. Los cinco se miden **en juego**, y son los candidatos a la
+planilla `AP`. No commiteado ni pusheado (GIT-7).

@@ -37,7 +37,7 @@ Un contrato entrante puede estar en tres situaciones, y la diferencia importa mu
 | 3 | Loot table (*qué* dropea un NPC al morir) | Cargo (por exclusión) | **DECLARADO** — dueño: Cortex/Caliber | `corpus-cargo/docs/Cargo_Trade_Arquitectura.md` §9 |
 | 4 | `CALIBER.Limbs.*` + eventos de daño/limb | Caliber | **NO CONGELADO** (ver §5) | `corpus-caliber/docs/Caliber_Architecture.md` §8, §9.a |
 | 5 | Defs de NPC y facciones de la Zona | corpus-stalker | **DECLARADO** | `corpus-stalker/docs/STALKER_Arquitectura.md` §3-§4 |
-| 6 | Scavenger-pickup: ¿es behavior de Cortex? | Caliber | **DECLARADO — a decidir en el diseño de Cortex** | `corpus-caliber/docs/Caliber_Architecture.md` §9.c |
+| 6 | Scavenger-pickup: ¿es behavior de Cortex? | Caliber | **CONTESTADO el 2026-08-25** — sí, y por eso queda bajo la autoridad de Cortex sobre el cuerpo del NPC; **pero NO se re-homea** (**CTX-8**) | `corpus-caliber/docs/Caliber_Architecture.md` §9.c |
 
 ## 3. Detalle por contrato
 
@@ -94,13 +94,19 @@ Es la relación estándar del ecosistema, en la dirección habitual: **el módul
 
 Encaja con 3.1: los datos de facción que stalker registre son los que Cortex después le reporta a Cargo vía `GetFactionInfo`. **Es la misma cadena**, y es la razón por la que conviene que el framework de providers de 3.1 exista antes de cablear las defs.
 
-### 3.6 · Scavenger-pickup — una frontera abierta a propósito
+### 3.6 · Scavenger-pickup — **CONTESTADO el 2026-08-25**
 
-**Situación: DECLARADO, a decidir en el diseño de Cortex — y ese diseño ABRIÓ el 2026-08-24**, así que la pregunta está sobre la mesa ahora. Es el punto [3] de `cortex_roadmap.txt`, con criterio de entrada: leer antes qué expone VJ Base.
+**Situación: CONTESTADO.** Era el punto [3] de `cortex_roadmap.txt` y se cerró con el voto del autor.
 
-El comportamiento de recolección de armas por NPC vive hoy en Caliber (`corpus_caliber_scavenger.lua`), acoplado al drop de `Limbs`. Su sede (§9.c) reconoce que **elegir target, la animación y el timing huelen a comportamiento NPC — territorio de Cortex**, pero deja la decisión explícitamente abierta: se re-homea **solo si** se confirma como behavior al diseñar Cortex.
+> **Sí es comportamiento de NPC, y por eso queda bajo la autoridad de Cortex sobre el cuerpo del NPC. Pero NO se re-homea: se queda entero en Caliber y pasa a ser el primer cliente del arbitraje.** (**CTX-8**, y el arbitraje es **CTX-9**.)
 
-No hay nada que honrar acá. Lo que hay es una **pregunta que el Block de Cortex tiene que responder**, y este doc existe para que no se pase por alto.
+⭐ **La pregunta escondía un supuesto** —*ser behavior* ⇒ *vivir en Cortex*— y medirlo lo desarmó: el archivo **no es una cosa, son tres**, y el acoplamiento **va al revés** de lo que decía la frase heredada (el scavenger **no llama a limbs ni una vez**; es limbs quien lo llama, en 5 call-sites ya guardados).
+
+⚠ **Y lo urgente resultó ser otra cosa:** ese comportamiento ya conduce el cuerpo del NPC **por el mismo canal** que Cortex necesita, así que **hoy ya colisiona sin dar un error** — incluido un falso verde en el sondeo de **CTX-7**.
+
+**Sede de la respuesta:** [`Cortex_Escuadrones_Arquitectura.md`](Cortex_Escuadrones_Arquitectura.md) §1 y §2. **Ninguna de las dos normas se re-deriva acá** — este doc sigue siendo de recepción, y lo que registra es que la pelota **volvió contestada**.
+
+⚠ **Lo que arrastra, y todavía no está hecho:** la sede de la pregunta —`Caliber_Architecture.md` §9.c— se actualizó en el mismo parche para que no siga diciendo *«no se decide acá»*, pero **el cable del arbitraje es código y el código no existe**: entra en el punto [5] del roadmap.
 
 ## 4. Consistencia mutua: qué ya se cruzó
 
@@ -109,7 +115,7 @@ El valor de juntar las seis filas en un solo lugar es poder preguntarse si se co
 - **3.2 y 3.3 son complementarios, no solapados.** Cargo se queda el contenedor, la UI y el GC; Cortex se queda la muerte y el contenido. La línea está donde tiene que estar: el primitivo de inventario es de quien ya lo tiene, la semántica es de quien tiene el dominio.
 - **3.1 y 3.5 son la misma cadena** vista desde los dos extremos (stalker registra → Cortex resuelve → Cargo pinta). Consistentes, y con un orden de implementación implícito: el framework de providers antes que las defs.
 - **3.4 es el único con riesgo real de diseño-en-falso**, y está señalizado por dos normas de Caliber (§9.a y **CAL-22**).
-- **3.6 no está decidido**, y eso es correcto: decidirlo ahora sería adivinar.
+- **3.6 no estaba decidido, y eso era correcto: decidirlo entonces habría sido adivinar.** ⭐ **Se contestó el 2026-08-25**, y la espera se pagó sola: la respuesta salió de medir el archivo y las bases de NPC, dos cosas que en julio de 2026 no se habían mirado. **Contestarlo en su momento habría dado la respuesta equivocada** —re-homear— porque el costo real (14 convars archivadas, y la regresión de Caliber solo) sólo aparece cuando abres el archivo.
 
 **No se encontró contradicción entre las seis.** Es la primera vez que se pueden mirar juntas.
 
